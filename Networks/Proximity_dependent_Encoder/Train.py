@@ -63,7 +63,7 @@ def train(encoders, train_loader, criterion, optimizer):
     for m in encoders : 
         m.train()
         
-    loss_whole = [0, 0, 0]
+    loss_total = [0, 0, 0]
     
     for i, (images, tpts, pts, center, scale) in enumerate(train_loader) :
         images = images.to(device)
@@ -84,27 +84,30 @@ def train(encoders, train_loader, criterion, optimizer):
         z = encoders[0](batch_augmented)
         z_i, z_j = torch.split(z, [B, B], dim=0)
         z = torch.cat((z_i.unsqueeze(1), z_j.unsqueeze(1)), dim=1)
-        pwconloss = criterion(z, landmark_select, i_l_distance, i_l_relationship, j_l_distance, j_l_relationship)
-        loss_whole[0] += pwconloss.item() / len(train_loader)
-        pwconloss.backward()
+        pwconloss_1 = criterion(z, landmark_select, i_l_distance, i_l_relationship, j_l_distance, j_l_relationship)
         
         z = encoders[1](batch_augmented)
         z_i, z_j = torch.split(z, [B, B], dim=0)
         z = torch.cat((z_i.unsqueeze(1), z_j.unsqueeze(1)), dim=1)
-        pwconloss = criterion(z, landmark_select, i_l_distance, i_l_relationship, j_l_distance, j_l_relationship)
-        loss_whole[1] += pwconloss.item() / len(train_loader)
-        pwconloss.backward()
+        pwconloss_2 = criterion(z, landmark_select, i_l_distance, i_l_relationship, j_l_distance, j_l_relationship)
         
         z = encoders[2](batch_augmented)
         z_i, z_j = torch.split(z, [B, B], dim=0)
         z = torch.cat((z_i.unsqueeze(1), z_j.unsqueeze(1)), dim=1)
-        pwconloss = criterion(z, landmark_select, i_l_distance, i_l_relationship, j_l_distance, j_l_relationship)
-        loss_whole[2] += pwconloss.item() / len(train_loader)
-        pwconloss.backward()
-    
+        pwconloss_3 = criterion(z, landmark_select, i_l_distance, i_l_relationship, j_l_distance, j_l_relationship)
+        
+        pwconloss_1.backward()
+        pwconloss_2.backward()
+        pwconloss_3.backward()
         optimizer.step()
         
-    return torch.FloatTensor(loss_whole)
+        loss_total[0] += pwconloss_1.item() / len(train_loader)
+        loss_total[1] += pwconloss_2.item() / len(train_loader)
+        loss_total[2] += pwconloss_3.item() / len(train_loader)
+        
+    loss_total = torch.FloatTensor(loss_total)
+    
+    return loss_total
 
 
 
