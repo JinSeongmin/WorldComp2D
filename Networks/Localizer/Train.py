@@ -74,6 +74,12 @@ def train(encoders, localizers, landmark_coordinate_prior, train_loader, optimiz
     
     for i, (images, tpts, pts, center, scale) in enumerate(train_loader) :         
         images = images.to(device)
+        
+        localizers[0].zero_grad()
+        localizers[1].zero_grad()
+        localizers[2].zero_grad()
+        optimizer.zero_grad()
+        
         with torch.no_grad() : 
             landmark_coords = tpts.view(args.batch_size, -1, 2).to(device)
             coords_label = (2 * landmark_coords / (img_size-1)) - 1
@@ -91,11 +97,6 @@ def train(encoders, localizers, landmark_coordinate_prior, train_loader, optimiz
             z_x_2 = torch.cat((z_2, fixation_point_norm.view(-1,2)), dim=1)
             z_x_3 = torch.cat((z_3, fixation_point_norm.view(-1,2)), dim=1)
             
-        localizers[0].zero_grad()
-        localizers[1].zero_grad()
-        localizers[2].zero_grad()
-        optimizer.zero_grad()
-        
         delta_x_hat_1 = localizers[0](z_x_1.view(args.batch_size, 9*(z_1.size(1)+2)))
         loss_1 = F.mse_loss(delta_x_hat_1, delta_coords_label)
         
