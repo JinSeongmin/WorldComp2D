@@ -81,6 +81,12 @@ def train(encoders, localizers, auxiliary_localizers, landmark_coordinate_prior,
     
     for i, (images, tpts, pts, center, scale) in enumerate(train_loader) :         
         images = images.to(device)
+        
+        auxiliary_localizers[0].zero_grad()
+        auxiliary_localizers[1].zero_grad()
+        auxiliary_localizers[2].zero_grad()
+        optimizer.zero_grad()
+        
         with torch.no_grad() : 
             landmark_coords = tpts.view(args.batch_size, -1, 2).to(device)
             fixation_point += torch.randint(-5, 6, (args.batch_size, 9, 2)).to(device)
@@ -131,12 +137,6 @@ def train(encoders, localizers, auxiliary_localizers, landmark_coordinate_prior,
         h_label, valid_mask = gaussian_heatmap(h_label_center, sigma=1.5)
         loss_per_l = F.mse_loss(h, h_label, reduction='none').mean(dim=(-1,-2))
         loss_3 = (loss_per_l * valid_mask.float()).sum() / (valid_mask.sum() + 1E-6)
-
-
-        auxiliary_localizers[0].zero_grad()
-        auxiliary_localizers[1].zero_grad()
-        auxiliary_localizers[2].zero_grad()
-        optimizer.zero_grad()
         
         loss_1.backward()
         loss_2.backward()
