@@ -1,5 +1,11 @@
 # WorldComp2D
 
+## Requirements
+To install requirements:
+
+```setup
+pip install -r requirements.txt
+```
 
 ### Dataset
 COFW (https://data.caltech.edu/records/bc0bf-nc666)
